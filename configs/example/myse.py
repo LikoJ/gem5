@@ -273,7 +273,7 @@ else:
         else:
             system.physmem.configFile = options.dramsim3_ini
         system.physmem.port = system.membus.mem_side_ports
-    elif option.mem_type = "FlatMemory":
+    elif option.mem_type == "FlatMemory":
         system.physmem = DRAMsim3()
         system.physmem.range = AddrRange(options.mem_size)
         system.flatmem = FlatMemory()
