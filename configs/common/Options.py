@@ -117,6 +117,10 @@ def addNoISAOptions(parser):
 
     parser.add_option("--memchecker", action="store_true")
 
+    # DRAMsim3 option
+    parser.add_option("--dramsim3-ini", type="string", default=None,
+                      help = "dramsim3 config file")
+
     # Cache Options
     parser.add_option("--external-memory-system", type="string",
                       help="use external ports of this port_type for caches")
