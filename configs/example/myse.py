@@ -264,16 +264,7 @@ else:
     system.system_port = system.membus.slave
     CacheConfig.config_cache(options, system)
     #MemConfig.config_mem(options, system)
-    if options.mem_type == "DRAMsim3":
-        system.physmem = DRAMsim3()
-        system.physmem.range = AddrRange(options.mem_size)
-        if options.dramsim3_ini is None:
-            system.physmem.configFile = "ext/dramsim3/DRAMsim3/config/DDR4_4Gb_x4_2400.ini"
-            #system.physmem.configFile = "ext/dramsim3/DRAMsim3/configs/HBM_4Gb_x128.ini"
-        else:
-            system.physmem.configFile = options.dramsim3_ini
-        system.physmem.port = system.membus.mem_side_ports
-    elif options.mem_type == "FlatMemory":
+    if options.flatmem == "true":
         system.physmem = DRAMsim3()
         system.physmem.range = AddrRange(options.mem_size)
         system.flatmem = FlatMemory()
@@ -285,6 +276,17 @@ else:
             system.physmem.configFile = options.dramsim3_ini
         system.physmem.port = system.flatmem.mem_side_port
         system.flatmem.bus_side_port = system.membus.mem_side_ports
+    elif options.mem_type == "DRAMsim3":
+        system.physmem = DRAMsim3()
+        system.physmem.range = AddrRange(options.mem_size)
+        if options.dramsim3_ini is None:
+            system.physmem.configFile = "ext/dramsim3/DRAMsim3/config/DDR4_4Gb_x4_2400.ini"
+            #system.physmem.configFile = "ext/dramsim3/DRAMsim3/configs/HBM_4Gb_x128.ini"
+        else:
+            system.physmem.configFile = options.dramsim3_ini
+        system.physmem.port = system.membus.mem_side_ports
+    else:
+        MemConfig.config_mem(options, system)
     config_filesystem(system, options)
 
 if options.wait_gdb:
