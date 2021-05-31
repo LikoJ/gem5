@@ -189,7 +189,7 @@ FlatMemory::MemSidePort::sendPacket(PacketPtr pkt) {
 }
 
 void
-FlatMemory::MemSidePort::trySendRetry(PacketPtr pkt) {
+FlatMemory::MemSidePort::trySendRetry() {
     if (needRetry && blockedPacket == nullptr) {
         // Only send a retry if the port is now completely free
         needRetry = false;
