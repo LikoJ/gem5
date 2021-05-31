@@ -194,7 +194,7 @@ FlatMemory::MemSidePort::trySendRetry() {
         // Only send a retry if the port is now completely free
         needRetry = false;
         DPRINTF(FlatMemory, "Sending retry req for %d\n", id);
-        sendRetryReq();
+        sendRetryResp();
     }
 }
 
