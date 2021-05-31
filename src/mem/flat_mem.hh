@@ -38,7 +38,7 @@ class FlatMemory : public SimObject {
         void sendPacket(PacketPtr pkt);
       protected:
         bool recvTimingResp(PacketPtr pkt) override;
-        void recvRespRetry() override;
+        void recvReqRetry() override;
         void recvRangeChange() override;
     };
 
@@ -49,13 +49,13 @@ class FlatMemory : public SimObject {
 
     AddrRangeList getAddrRanges() const;
     void sendRangeChange();
-    Tick handleAtomic()(PacketPtr pkt);
+    Tick handleAtomic(PacketPtr pkt);
     void handleFunctional(PacketPtr pkt);
     bool handleRequest(PacketPtr pkt);
     bool handleResponse(PacketPtr pkt);
 
   public:
-    FlatMemory(FlatMemoryParams &params);
+    FlatMemory(const FlatMemoryParams &params);
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;
 };

@@ -15,7 +15,7 @@ FlatMemory::getPort(const std::string &if_name, PortID idx) {
     } else if (if_name == "mem_side_port") {
         return mem_side_port;
     } else {
-        return ClockedObject::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 
@@ -54,7 +54,7 @@ FlatMemory::handleRequest(PacketPtr pkt) {
     return true;
 }
 
-void
+bool
 FlatMemory::handleResponse(PacketPtr pkt) {
     assert(bus_side_blocked);
     DPRINTF(FlatMemory, "Got response for addr %#x\n", pkt->getAddr());
