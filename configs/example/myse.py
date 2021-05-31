@@ -267,6 +267,7 @@ else:
     if options.flat_mem == "true":
         system.physmem = DRAMsim3()
         system.physmem.range = AddrRange(options.mem_size)
+        system.flatmem = FlatMemory()
         if options.dramsim3_ini is None:
             system.physmem.configFile = "ext/dramsim3/DRAMsim3/config/DDR4_4Gb_x4_2400.ini"
             #system.physmem.configFile = "ext/dramsim3/DRAMsim3/configs/HBM_4Gb_x128.ini"
