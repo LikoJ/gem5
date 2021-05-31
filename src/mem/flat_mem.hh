@@ -20,7 +20,7 @@ class FlatMemory : public SimObject {
       public:
         BusSidePort(const std::string& _name, FlatMemory& _flatmem);
         AddrRangeList getAddrRanges() const override;
-        void sendPacket(PacketPtr pkt);
+        bool sendPacket(PacketPtr pkt);
         void trySendRetry();
       protected:
         Tick recvAtomic(PacketPtr pkt) override;
@@ -32,10 +32,12 @@ class FlatMemory : public SimObject {
     class MemSidePort : public RequestPort {
       private:
         FlatMemory& flatmem;
+        bool needRetry;
         PacketPtr blockedPacket;
       public:
         MemSidePort(const std::string& _name, FlatMemory& _flatmem);
-        void sendPacket(PacketPtr pkt);
+        bool sendPacket(PacketPtr pkt);
+        void trySendRetry();
       protected:
         bool recvTimingResp(PacketPtr pkt) override;
         void recvReqRetry() override;
@@ -46,6 +48,7 @@ class FlatMemory : public SimObject {
     MemSidePort mem_side_port;
 
     bool bus_side_blocked;
+    bool mem_side_blocked;
 
     AddrRangeList getAddrRanges() const;
     void sendRangeChange();
@@ -53,6 +56,8 @@ class FlatMemory : public SimObject {
     void handleFunctional(PacketPtr pkt);
     bool handleRequest(PacketPtr pkt);
     bool handleResponse(PacketPtr pkt);
+    void handleReqRetry(PacketPtr pkt);
+    void handleRespRetry(PacketPtr pkt);
 
   public:
     FlatMemory(const FlatMemoryParams &params);
