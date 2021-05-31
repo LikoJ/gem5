@@ -264,7 +264,7 @@ else:
     system.system_port = system.membus.slave
     CacheConfig.config_cache(options, system)
     #MemConfig.config_mem(options, system)
-    if options.flatmem == "true":
+    if options.flat_mem == "true":
         system.physmem = DRAMsim3()
         system.physmem.range = AddrRange(options.mem_size)
         system.flatmem = FlatMemory()
