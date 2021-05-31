@@ -148,7 +148,7 @@ FlatMemory::BusSidePort::recvRespRetry() {
 
 FlatMemory::MemSidePort::MemSidePort(const std::string& _name,
                                      FlatMemory& _flatmem)
-    : RequestPort(_name, _flatmem),
+    : RequestPort(_name, &_flatmem),
       flatmem(_flatmem),
       blockedPacket(nullptr) {}
 
