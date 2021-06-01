@@ -62,7 +62,7 @@ FlatMemory::handleResponse(PacketPtr pkt) {
 
     // Simply forward to the bus port
     if (!bus_side_port.sendPacket(pkt)) {
-        mem_side_blocked = false;
+        mem_side_blocked = true;
         return false;
     } else {
         return true;
