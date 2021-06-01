@@ -21,7 +21,7 @@ FlatMemory::getPort(const std::string &if_name, PortID idx) {
 
 AddrRangeList
 FlatMemory::getAddrRanges() const {
-    DPRINTF(FlatMemory, "Sending new ranges\n");
+    // DPRINTF(FlatMemory, "Sending new ranges\n");
     // Just use the same ranges as whatever is on the memory side.
     return mem_side_port.getAddrRanges();
 }
@@ -42,10 +42,11 @@ FlatMemory::handleRequest(PacketPtr pkt) {
         return false;
     }
 
-    DPRINTF(FlatMemory, "Got request for addr %#x\n", pkt->getAddr());
+    // DPRINTF(FlatMemory, "Got request for addr %#x\n", pkt->getAddr());
 
     // Simply forward to the memory port
     if (!mem_side_port.sendPacket(pkt)) {
+        DPRINTF(FlatMemory, "Request blocked for addr %#x\n", pkt->getAddr());
         bus_side_blocked = true;
         return false;
     } else {
@@ -58,10 +59,11 @@ FlatMemory::handleResponse(PacketPtr pkt) {
     if (mem_side_blocked) {
         return false;
     }
-    DPRINTF(FlatMemory, "Got response for addr %#x\n", pkt->getAddr());
+    // DPRINTF(FlatMemory, "Got response for addr %#x\n", pkt->getAddr());
 
     // Simply forward to the bus port
     if (!bus_side_port.sendPacket(pkt)) {
+        DPRINTF(FlatMemory, "Response blocked for addr %#x\n", pkt->getAddr());
         mem_side_blocked = true;
         return false;
     } else {
@@ -193,7 +195,7 @@ FlatMemory::MemSidePort::trySendRetry() {
     if (needRetry && blockedPacket == nullptr) {
         // Only send a retry if the port is now completely free
         needRetry = false;
-        DPRINTF(FlatMemory, "Sending retry req for %d\n", id);
+        DPRINTF(FlatMemory, "Sending retry resp for %d\n", id);
         sendRetryResp();
     }
 }
