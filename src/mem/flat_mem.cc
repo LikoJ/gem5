@@ -48,10 +48,8 @@ FlatMemory::handleRequest(PacketPtr pkt) {
     if (!mem_side_port.sendPacket(pkt)) {
         DPRINTF(FlatMemory, "Request blocked for addr %#x\n", pkt->getAddr());
         bus_side_blocked = true;
-        return false;
-    } else {
-        return true;
     }
+    return true;
 }
 
 bool
@@ -66,10 +64,8 @@ FlatMemory::handleResponse(PacketPtr pkt) {
     if (!bus_side_port.sendPacket(pkt)) {
         DPRINTF(FlatMemory, "Response blocked for addr %#x\n", pkt->getAddr());
         mem_side_blocked = true;
-        return false;
-    } else {
-        return true;
     }
+    return true;
 }
 
 void
