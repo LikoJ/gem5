@@ -78,7 +78,7 @@ FlatMemory::handleReqRetry(PacketPtr pkt) {
     if (!mem_side_port.sendPacket(pkt)) {
         bus_side_blocked = true;
     } else {
-        bus_side_port.trySendRetry();
+        mem_side_port.trySendRetry();
         bus_side_blocked = false;
     }
 }
@@ -90,7 +90,7 @@ FlatMemory::handleRespRetry(PacketPtr pkt) {
     if (!bus_side_port.sendPacket(pkt)) {
         mem_side_blocked = true;
     } else {
-        mem_side_port.trySendRetry();
+        bus_side_port.trySendRetry();
         mem_side_blocked = false;
     }
 }
