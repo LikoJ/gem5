@@ -39,9 +39,9 @@ FlatMemory::handleFunctional(PacketPtr pkt) {
 bool
 FlatMemory::handleRequest(PacketPtr pkt) {
     if (bus_side_blocked) {
+        DPRINTF(FlatMemory, "Request blocked directly for addr %#x\n", pkt->getAddr());
         return false;
     }
-
     // DPRINTF(FlatMemory, "Got request for addr %#x\n", pkt->getAddr());
 
     // Simply forward to the memory port
@@ -57,6 +57,7 @@ FlatMemory::handleRequest(PacketPtr pkt) {
 bool
 FlatMemory::handleResponse(PacketPtr pkt) {
     if (mem_side_blocked) {
+        DPRINTF(FlatMemory, "Response blocked directly for addr %#x\n", pkt->getAddr());
         return false;
     }
     // DPRINTF(FlatMemory, "Got response for addr %#x\n", pkt->getAddr());
@@ -78,7 +79,7 @@ FlatMemory::handleReqRetry(PacketPtr pkt) {
     if (!mem_side_port.sendPacket(pkt)) {
         bus_side_blocked = true;
     } else {
-        mem_side_port.trySendRetry();
+        bus_side_port.trySendRetry();
         bus_side_blocked = false;
     }
 }
@@ -90,7 +91,7 @@ FlatMemory::handleRespRetry(PacketPtr pkt) {
     if (!bus_side_port.sendPacket(pkt)) {
         mem_side_blocked = true;
     } else {
-        bus_side_port.trySendRetry();
+        mem_side_port.trySendRetry();
         mem_side_blocked = false;
     }
 }
