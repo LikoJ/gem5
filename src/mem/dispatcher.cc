@@ -283,7 +283,7 @@ Dispatcher::MemSidePort::setRespPort(PacketPtr pkt) {
 bool
 Dispatcher::MemSidePort::recvTimingResp(PacketPtr pkt) {
     setRespPort(pkt);
-    if (!Dispatcher.handleResponse(pkt)) {
+    if (!disp.handleResponse(pkt)) {
         needRetry = true;
         return false;
     } else {
