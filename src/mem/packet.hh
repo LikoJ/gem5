@@ -258,6 +258,16 @@ class MemCmd
 class Packet : public Printable
 {
   public:
+    // add by jbyao 2021.6.13
+    enum PortType {
+        RemappingTable,
+        MigrationManager,
+        AccessCounter,
+        PhysicalDram,
+        PhysicalHbm
+    };
+    PortType reqport;
+    PortType respport;
     typedef uint32_t FlagsType;
     typedef ::Flags<FlagsType> Flags;
 
