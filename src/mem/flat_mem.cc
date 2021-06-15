@@ -153,7 +153,7 @@ FlatMemory::BusSidePort::recvTimingReq(PacketPtr pkt) {
 void
 FlatMemory::BusSidePort::recvRespRetry() {
     // We should have a blocked packet if this function is called.
-    assert(!blocked);
+    assert(blocked);
 
     blocked = false;
 
