@@ -21,7 +21,7 @@ class Dispatcher : public SimObject {
 
     enum BlockType {
       Rt2Ac,    // Request packet from Remmaping Table   blocks Acess counter
-      Mm2Ac,    // Request packet from Migration Manager blocks Acess counter
+      // Mm2Ac,    // Request packet from Migration Manager blocks Acess counter
       Rt2Hbm,   // Request packet from Remmaping Table   blocks Physical Hbm
       Mm2Hbm,   // Request packet from Migration Manager blocks Physical Hbm
       Rt2Dram,  // Request packet from Remmaping Table   blocks Physical Dram
@@ -44,6 +44,7 @@ class Dispatcher : public SimObject {
       private:
         Dispatcher& disp;
         bool needRetry;
+        bool blocked;
         PortType porttype;
         void setReqPort(PacketPtr pkt);
       public:
@@ -62,6 +63,7 @@ class Dispatcher : public SimObject {
       private:
         Dispatcher& disp;
         bool needRetry;
+        bool blocked;
         PortType porttype;
         void setRespPort(PacketPtr pkt);
       public:

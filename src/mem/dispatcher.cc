@@ -74,15 +74,6 @@ Dispatcher::handleFunctional(PacketPtr pkt) {
 
 bool
 Dispatcher::handleRequest(PacketPtr pkt) {
-    if (blocked[BlockType::Rt2Ac] || blocked[BlockType::Mm2Ac] || !ac_side_port.sendPacket(pkt)) {
-        DPRINTF(Dispatcher, "Access Counter is busy! Request blocked for addr %#x\n", pkt->getAddr());
-        if (pkt->reqport == Packet::PortType::RemappingTable) {
-            blocked[BlockType::Rt2Ac] = true;
-        } else if (pkt->reqport == Packet::PortType::MigrationManager) {
-            blocked[BlockType::Mm2Ac] = true;
-        }
-        return false;
-    }
     if (isDramOrHbm(pkt)) {
         if (blocked[BlockType::Rt2Dram] || blocked[BlockType::Mm2Dram] || !dram_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Physical DRAM is busy! Request blocked for addr %#x\n", pkt->getAddr());
@@ -104,6 +95,13 @@ Dispatcher::handleRequest(PacketPtr pkt) {
             return false;
         }
     }
+    if (pkt->reqport == Packet::PortType::RemappingTable && (blocked[BlockType::Rt2Ac] || !ac_side_port.sendPacket(pkt))) {
+        DPRINTF(Dispatcher, "Access Counter is busy! Request blocked for addr %#x\n", pkt->getAddr());
+        if (pkt->reqport == Packet::PortType::RemappingTable) {
+            blocked[BlockType::Rt2Ac] = true;
+        }
+        return false;
+    }
     return true;
 }
 
@@ -119,7 +117,6 @@ Dispatcher::handleResponse(PacketPtr pkt) {
             }
             return false;
         }
-        return true;
     } else if (pkt->reqport == Packet::PortType::MigrationManager) {
         if (blocked[BlockType::Dram2Mm] || blocked[BlockType::Hbm2Mm] || !mm_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Remapping table is busy! Response blocked for addr %#x\n", pkt->getAddr());
@@ -130,8 +127,8 @@ Dispatcher::handleResponse(PacketPtr pkt) {
             }
             return false;
         }
-        return true;
     }
+    return true;
 }
 
 void
@@ -176,7 +173,8 @@ Dispatcher::CpuSidePort::CpuSidePort(const std::string& _name,
     : ResponsePort(_name, &_disp),
       disp(_disp),
       porttype(_type),
-      needRetry(false) {}
+      needRetry(false),
+      blocked(false) {}
 
 AddrRangeList
 Dispatcher::CpuSidePort::getAddrRanges() const {
@@ -185,8 +183,10 @@ Dispatcher::CpuSidePort::getAddrRanges() const {
 
 bool
 Dispatcher::CpuSidePort::sendPacket(PacketPtr pkt) {
+    panic_if(blocked, "Should never try to send if blocked!");
     // If we can't send the packet across the port, return false.
     if (!sendTimingResp(pkt)) {
+        blocked = true;
         return false;
     } else {
         return true;
@@ -196,7 +196,7 @@ Dispatcher::CpuSidePort::sendPacket(PacketPtr pkt) {
 void
 Dispatcher::CpuSidePort::trySendRetry()
 {
-    if (needRetry) {
+    if (needRetry && !blocked) {
         needRetry = false;
         DPRINTF(Dispatcher, "Sending retry req for %d\n", id);
         sendRetryReq();
@@ -235,7 +235,8 @@ Dispatcher::CpuSidePort::recvTimingReq(PacketPtr pkt) {
 
 void
 Dispatcher::CpuSidePort::recvRespRetry() {
-    assert(needRetry);
+    assert(blocked);
+    blocked = false;
     disp.handleRespRetry();
 }
 
@@ -245,12 +246,15 @@ Dispatcher::MemSidePort::MemSidePort(const std::string& _name,
     : RequestPort(_name, &_disp),
       disp(_disp),
       porttype(_type),
-      needRetry(false) {}
+      needRetry(false),
+      blocked(false) {}
 
 bool
 Dispatcher::MemSidePort::sendPacket(PacketPtr pkt) {
+    panic_if(blocked, "Should never try to send if blocked!");
     // If we can't send the packet across the port, return false.
     if (!sendTimingReq(pkt)) {
+        blocked = true;
         return false;
     } else {
         return true;
@@ -259,7 +263,7 @@ Dispatcher::MemSidePort::sendPacket(PacketPtr pkt) {
 
 void
 Dispatcher::MemSidePort::trySendRetry() {
-    if (needRetry) {
+    if (needRetry && !blocked) {
         needRetry = false;
         DPRINTF(Dispatcher, "Sending retry req for %d\n", id);
         sendRetryResp();
@@ -288,7 +292,8 @@ Dispatcher::MemSidePort::recvTimingResp(PacketPtr pkt) {
 
 void
 Dispatcher::MemSidePort::recvReqRetry() {
-    assert(needRetry);
+    assert(blocked);
+    blocked = false;
     disp.handleReqRetry();
 }
 
