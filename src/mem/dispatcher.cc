@@ -8,17 +8,12 @@ Dispatcher::Dispatcher(const DispatcherParams& params)
       mm_side_port(name() + ".mm_side_port", *this, Dispatcher::PortType::MigrationManager),
       ac_side_port(name() + ".ac_side_port", *this, Dispatcher::PortType::AccessCounter),
       hbm_side_port(name() + ".hbm_side_port", *this, Dispatcher::PortType::PhysicalHbm),
-      dram_side_port(name() + "dram_side_port", *this, Dispatcher::PortType::PhysicalDram),
-      req_ac_rt_blocked(false),
-      req_ac_mm_blocked(false),
-      req_hbm_rt_blocked(false),
-      req_hbm_mm_blocked(false),
-      req_dram_rt_blocked(false),
-      req_dram_mm_blocked(false),
-      resp_mm_dram_blocked(false),
-      resp_mm_hbm_blocked(false),
-      resp_rt_dram_blocked(false),
-      resp_rt_hbm_blocked(false) {}
+      dram_side_port(name() + "dram_side_port", *this, Dispatcher::PortType::PhysicalDram) {
+
+    for (int i = 0; i < BlockType::BlockTypeSize; i++) {
+        blocked[i] = false;
+    }
+}
 
 Port&
 Dispatcher::getPort(const std::string& if_name, PortID idx) {
@@ -79,32 +74,32 @@ Dispatcher::handleFunctional(PacketPtr pkt) {
 
 bool
 Dispatcher::handleRequest(PacketPtr pkt) {
-    if (req_ac_rt_blocked || req_ac_mm_blocked || !ac_side_port.sendPacket(pkt)) {
+    if (blocked[BlockType::Rt2Ac] || blocked[BlockType::Mm2Ac] || !ac_side_port.sendPacket(pkt)) {
         DPRINTF(Dispatcher, "Access Counter is busy! Request blocked for addr %#x\n", pkt->getAddr());
         if (pkt->reqport == Packet::PortType::RemappingTable) {
-            req_ac_rt_blocked = true;
+            blocked[BlockType::Rt2Ac] = true;
         } else if (pkt->reqport == Packet::PortType::MigrationManager) {
-            req_ac_mm_blocked = true;
+            blocked[BlockType::Mm2Ac] = true;
         }
         return false;
     }
     if (isDramOrHbm(pkt)) {
-        if (req_dram_rt_blocked || req_dram_mm_blocked || !dram_side_port.sendPacket(pkt)) {
+        if (blocked[BlockType::Rt2Dram] || blocked[BlockType::Mm2Dram] || !dram_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Physical DRAM is busy! Request blocked for addr %#x\n", pkt->getAddr());
             if (pkt->reqport == Packet::PortType::RemappingTable) {
-                req_dram_rt_blocked = true;
+                blocked[BlockType::Rt2Dram] = true;
             } else if (pkt->reqport == Packet::PortType::MigrationManager) {
-                req_dram_mm_blocked = true;
+                blocked[BlockType::Mm2Dram] = true;
             }
             return false;
         }
     } else {
-        if (req_hbm_rt_blocked || req_hbm_mm_blocked || !hbm_side_port.sendPacket(pkt)) {
+        if (blocked[BlockType::Rt2Hbm] || blocked[BlockType::Mm2Hbm] || !hbm_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Physical HBM is busy! Request blocked for addr %#x\n", pkt->getAddr());
             if (pkt->reqport == Packet::PortType::RemappingTable) {
-                req_hbm_rt_blocked = true;
+                blocked[BlockType::Rt2Hbm] = true;
             } else if (pkt->reqport == Packet::PortType::MigrationManager) {
-                req_hbm_mm_blocked = true;
+                blocked[BlockType::Mm2Hbm] = true;
             }
             return false;
         }
@@ -115,23 +110,23 @@ Dispatcher::handleRequest(PacketPtr pkt) {
 bool
 Dispatcher::handleResponse(PacketPtr pkt) {
     if (pkt->reqport == Packet::PortType::RemappingTable) {
-        if (resp_rt_dram_blocked || resp_rt_hbm_blocked || !rt_side_port.sendPacket(pkt)) {
+        if (blocked[BlockType::Dram2Rt] || blocked[BlockType::Hbm2Rt] || !rt_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Remapping table is busy! Response blocked for addr %#x\n", pkt->getAddr());
             if (pkt->respport == Packet::PortType::PhysicalDram) {
-                resp_rt_dram_blocked = true;
+                blocked[BlockType::Dram2Rt] = true;
             } else if (pkt->respport == Packet::PortType::PhysicalHbm) {
-                resp_rt_hbm_blocked = true;
+                blocked[BlockType::Hbm2Rt] = true;
             }
             return false;
         }
         return true;
     } else if (pkt->reqport == Packet::PortType::MigrationManager) {
-        if (resp_mm_dram_blocked || resp_mm_hbm_blocked || !mm_side_port.sendPacket(pkt)) {
+        if (blocked[BlockType::Dram2Mm] || blocked[BlockType::Hbm2Mm] || !mm_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Remapping table is busy! Response blocked for addr %#x\n", pkt->getAddr());
             if (pkt->respport == Packet::PortType::PhysicalDram) {
-                resp_mm_dram_blocked = true;
+                blocked[BlockType::Dram2Mm] = true;
             } else if (pkt->respport == Packet::PortType::PhysicalHbm) {
-                resp_mm_hbm_blocked = true;
+                blocked[BlockType::Hbm2Mm] = true;
             }
             return false;
         }
@@ -141,36 +136,36 @@ Dispatcher::handleResponse(PacketPtr pkt) {
 
 void
 Dispatcher::handleReqRetry() {
-    assert(req_ac_rt_blocked || req_ac_mm_blocked ||
-           req_dram_rt_blocked || req_dram_mm_blocked ||
-           req_hbm_rt_blocked || req_hbm_mm_blocked);
+    assert(blocked[BlockType::Rt2Ac] || blocked[BlockType::Mm2Ac] ||
+           blocked[BlockType::Rt2Dram] || blocked[BlockType::Mm2Dram] ||
+           blocked[BlockType::Rt2Hbm] || blocked[BlockType::Mm2Hbm]);
 
-    if (req_ac_rt_blocked || req_dram_rt_blocked || req_hbm_rt_blocked) {
-        req_ac_rt_blocked = false;
-        req_dram_rt_blocked = false;
-        req_hbm_rt_blocked = false;
+    if (blocked[BlockType::Rt2Ac] || blocked[BlockType::Rt2Dram] || blocked[BlockType::Rt2Hbm]) {
+        blocked[BlockType::Rt2Ac] = false;
+        blocked[BlockType::Rt2Dram] = false;
+        blocked[BlockType::Rt2Hbm] = false;
         rt_side_port.trySendRetry();
     }
-    if (req_ac_mm_blocked || req_dram_mm_blocked || req_hbm_mm_blocked) {
-        req_ac_mm_blocked = false;
-        req_dram_mm_blocked = false;
-        req_hbm_mm_blocked = false;
+    if (blocked[BlockType::Mm2Ac] || blocked[BlockType::Mm2Dram] || blocked[BlockType::Mm2Hbm]) {
+        blocked[BlockType::Mm2Ac] = false;
+        blocked[BlockType::Mm2Dram] = false;
+        blocked[BlockType::Mm2Hbm] = false;
         mm_side_port.trySendRetry();
     }
 }
 
 void
 Dispatcher::handleRespRetry() {
-    assert(resp_rt_dram_blocked || resp_rt_hbm_blocked ||
-           resp_mm_dram_blocked || resp_mm_hbm_blocked);
-    if (resp_rt_dram_blocked || resp_rt_hbm_blocked) {
-        resp_rt_dram_blocked = false;
-        resp_mm_dram_blocked = false;
+    assert(blocked[BlockType::Dram2Rt] || blocked[BlockType::Hbm2Rt] ||
+           blocked[BlockType::Dram2Mm] || blocked[BlockType::Hbm2Mm]);
+    if (blocked[BlockType::Dram2Rt] || blocked[BlockType::Dram2Mm]) {
+        blocked[BlockType::Dram2Rt] = false;
+        blocked[BlockType::Dram2Mm] = false;
         dram_side_port.trySendRetry();
     }
-    if (resp_rt_hbm_blocked || resp_mm_hbm_blocked) {
-        resp_rt_hbm_blocked = false;
-        resp_mm_hbm_blocked = false;
+    if (blocked[BlockType::Hbm2Rt] || blocked[BlockType::Hbm2Mm]) {
+        blocked[BlockType::Hbm2Rt] = false;
+        blocked[BlockType::Hbm2Mm] = false;
         hbm_side_port.trySendRetry();
     }
 }

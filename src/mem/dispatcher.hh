@@ -18,6 +18,22 @@ class Dispatcher : public SimObject {
       PhysicalDram,
       PhysicalHbm
     };
+
+    enum BlockType {
+      Rt2Ac,    // Request packet from Remmaping Table   blocks Acess counter
+      Mm2Ac,    // Request packet from Migration Manager blocks Acess counter
+      Rt2Hbm,   // Request packet from Remmaping Table   blocks Physical Hbm
+      Mm2Hbm,   // Request packet from Migration Manager blocks Physical Hbm
+      Rt2Dram,  // Request packet from Remmaping Table   blocks Physical Dram
+      Mm2Dram,  // Request packet from Migration Manager blocks Physical Dram
+
+      Dram2Rt,  // Response packet from Physical Dram    blocks Remmaping Table
+      Hbm2Rt,   // Response packet from Physical Hbm     blocks Remmaping Table
+      Dram2Mm,  // Response packet from Physical Dram    blocks Migration Manager
+      Hbm2Mm,   // Response packet from Physical Hbm     blocks Migration Manager
+
+      BlockTypeSize
+    }
     Dispatcher(const DispatcherParams &params);
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;
@@ -64,17 +80,7 @@ class Dispatcher : public SimObject {
     MemSidePort hbm_side_port;  // connect to physical hbm
     MemSidePort dram_side_port; // connect to physical dram
 
-    bool req_ac_rt_blocked;     // access counter is busy, request from rt
-    bool req_ac_mm_blocked;     // access counter is busy, request from mm
-    bool req_hbm_rt_blocked;    // physical hbm is busy, request from rt
-    bool req_hbm_mm_blocked;    // physical hbm is busy, request from mm
-    bool req_dram_rt_blocked;   // physical dram is busy, request from rt
-    bool req_dram_mm_blocked;   // physical dram is busy, request from mm
-
-    bool resp_rt_dram_blocked;  // remapping table is busy, response from dram
-    bool resp_rt_hbm_blocked;   // remapping table is busy, response from hbm
-    bool resp_mm_dram_blocked;  // migration manager is busy, response from dram
-    bool resp_mm_hbm_blocked;   // migration manager is busy, response from hbm
+    bool blocked[BlockType::BlockTypeSize];
 
     AddrRangeList getAddrRanges() const;
     void sendRangeChange();
