@@ -33,7 +33,7 @@ class Dispatcher : public SimObject {
       Hbm2Mm,   // Response packet from Physical Hbm     blocks Migration Manager
 
       BlockTypeSize
-    }
+    };
     Dispatcher(const DispatcherParams &params);
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;
