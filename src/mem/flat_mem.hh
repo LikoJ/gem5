@@ -16,6 +16,7 @@ class FlatMemory : public SimObject {
       private:
         FlatMemory& flatmem;
         bool needRetry;
+        bool blocked;
       public:
         BusSidePort(const std::string& _name, FlatMemory& _flatmem);
         AddrRangeList getAddrRanges() const override;
@@ -32,6 +33,7 @@ class FlatMemory : public SimObject {
       private:
         FlatMemory& flatmem;
         bool needRetry;
+        bool blocked;
       public:
         MemSidePort(const std::string& _name, FlatMemory& _flatmem);
         bool sendPacket(PacketPtr pkt);

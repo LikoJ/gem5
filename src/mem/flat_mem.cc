@@ -73,20 +73,20 @@ FlatMemory::handleResponse(PacketPtr pkt) {
 void
 FlatMemory::handleReqRetry() {
     assert(bus_side_blocked);
-    DPRINTF(FlatMemory, "Retry request\n");
+    DPRINTF(FlatMemory, "Retry request for addr %#x\n", pkt->getAddr());
 
     bus_side_blocked = false;
     bus_side_port.trySendRetry();
-
 }
 
 void
 FlatMemory::handleRespRetry() {
     assert(mem_side_blocked);
-    DPRINTF(FlatMemory, "Retry response\n");
+    DPRINTF(FlatMemory, "Retry response for addr %#x\n", pkt->getAddr());
 
     mem_side_blocked = false;
     mem_side_port.trySendRetry();
+
 }
 
 void
@@ -98,7 +98,8 @@ FlatMemory::BusSidePort::BusSidePort(const std::string& _name,
                                      FlatMemory& _flatmem)
     : ResponsePort(_name, &_flatmem),
       flatmem(_flatmem),
-      needRetry(false) {}
+      needRetry(false),
+      blocked(false) {}
 
 AddrRangeList
 FlatMemory::BusSidePort::getAddrRanges() const {
@@ -107,10 +108,11 @@ FlatMemory::BusSidePort::getAddrRanges() const {
 
 bool
 FlatMemory::BusSidePort::sendPacket(PacketPtr pkt) {
-    panic_if(needRetry, "Should never try to send if blocked!");
+    panic_if(!blocked, "Should never try to send if blocked!");
 
     // If we can't send the packet across the port, store it for later.
     if (!sendTimingResp(pkt)) {
+        blocked = true;
         return false;
     } else {
         return true;
@@ -120,7 +122,7 @@ FlatMemory::BusSidePort::sendPacket(PacketPtr pkt) {
 void
 FlatMemory::BusSidePort::trySendRetry()
 {
-    if (needRetry) {
+    if (needRetry && !blocked) {
         // Only send a retry if the port is now completely free
         needRetry = false;
         DPRINTF(FlatMemory, "Sending retry req for %d\n", id);
@@ -151,24 +153,29 @@ FlatMemory::BusSidePort::recvTimingReq(PacketPtr pkt) {
 void
 FlatMemory::BusSidePort::recvRespRetry() {
     // We should have a blocked packet if this function is called.
-    assert(needRetry);
+    assert(!blocked);
 
+    blocked = false;
+
+    // Try to resend it. It's possible that it fails again.
     flatmem.handleRespRetry();
 }
 
 FlatMemory::MemSidePort::MemSidePort(const std::string& _name,
                                      FlatMemory& _flatmem)
     : RequestPort(_name, &_flatmem),
-      flatmem(_flatmem) {}
+      flatmem(_flatmem),
+      blocked(false) {}
 
 bool
 FlatMemory::MemSidePort::sendPacket(PacketPtr pkt) {
     // Note: This flow control is very simple since the memobj is blocking.
 
-    panic_if(needRetry, "Should never try to send if blocked!");
+    panic_if(!blocked, "Should never try to send if blocked!");
 
     // If we can't send the packet across the port, store it for later.
     if (!sendTimingReq(pkt)) {
+        blocked = true;
         return false;
     } else {
         return true;
@@ -177,7 +184,7 @@ FlatMemory::MemSidePort::sendPacket(PacketPtr pkt) {
 
 void
 FlatMemory::MemSidePort::trySendRetry() {
-    if (needRetry) {
+    if (needRetry && !blocked) {
         // Only send a retry if the port is now completely free
         needRetry = false;
         DPRINTF(FlatMemory, "Sending retry resp for %d\n", id);
@@ -199,7 +206,10 @@ FlatMemory::MemSidePort::recvTimingResp(PacketPtr pkt) {
 void
 FlatMemory::MemSidePort::recvReqRetry() {
     // We should have a blocked packet if this function is called.
-    assert(needRetry);
+    assert(blocked);
+
+    // Grab the blocked packet.
+    blocked = false;
 
     flatmem.handleReqRetry();
 }
