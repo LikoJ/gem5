@@ -34,6 +34,7 @@ class Dispatcher : public SimObject {
 
       BlockTypeSize
     };
+    
     Dispatcher(const DispatcherParams &params);
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;
