@@ -108,7 +108,7 @@ FlatMemory::BusSidePort::getAddrRanges() const {
 
 bool
 FlatMemory::BusSidePort::sendPacket(PacketPtr pkt) {
-    panic_if(!blocked, "Should never try to send if blocked!");
+    panic_if(blocked, "Should never try to send if blocked!");
 
     // If we can't send the packet across the port, store it for later.
     if (!sendTimingResp(pkt)) {
@@ -171,7 +171,7 @@ bool
 FlatMemory::MemSidePort::sendPacket(PacketPtr pkt) {
     // Note: This flow control is very simple since the memobj is blocking.
 
-    panic_if(!blocked, "Should never try to send if blocked!");
+    panic_if(blocked, "Should never try to send if blocked!");
 
     // If we can't send the packet across the port, store it for later.
     if (!sendTimingReq(pkt)) {
