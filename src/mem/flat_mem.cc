@@ -73,7 +73,7 @@ FlatMemory::handleResponse(PacketPtr pkt) {
 void
 FlatMemory::handleReqRetry() {
     assert(bus_side_blocked);
-    DPRINTF(FlatMemory, "Retry request for addr %#x\n", pkt->getAddr());
+    DPRINTF(FlatMemory, "Retry request\n");
 
     bus_side_blocked = false;
     bus_side_port.trySendRetry();
@@ -83,8 +83,8 @@ FlatMemory::handleReqRetry() {
 void
 FlatMemory::handleRespRetry() {
     assert(mem_side_blocked);
-    DPRINTF(FlatMemory, "Retry response for addr %#x\n", pkt->getAddr());
-    
+    DPRINTF(FlatMemory, "Retry response\n");
+
     mem_side_blocked = false;
     mem_side_port.trySendRetry();
 }
