@@ -133,7 +133,7 @@ Dispatcher::handleResponse(PacketPtr pkt) {
 
 void
 Dispatcher::handleReqRetry() {
-    assert(blocked[BlockType::Rt2Ac] || blocked[BlockType::Mm2Ac] ||
+    assert(blocked[BlockType::Rt2Ac] ||
            blocked[BlockType::Rt2Dram] || blocked[BlockType::Mm2Dram] ||
            blocked[BlockType::Rt2Hbm] || blocked[BlockType::Mm2Hbm]);
 
@@ -143,8 +143,7 @@ Dispatcher::handleReqRetry() {
         blocked[BlockType::Rt2Hbm] = false;
         rt_side_port.trySendRetry();
     }
-    if (blocked[BlockType::Mm2Ac] || blocked[BlockType::Mm2Dram] || blocked[BlockType::Mm2Hbm]) {
-        blocked[BlockType::Mm2Ac] = false;
+    if (blocked[BlockType::Mm2Dram] || blocked[BlockType::Mm2Hbm]) {
         blocked[BlockType::Mm2Dram] = false;
         blocked[BlockType::Mm2Hbm] = false;
         mm_side_port.trySendRetry();
