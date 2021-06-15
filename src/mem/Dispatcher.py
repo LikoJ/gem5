@@ -7,16 +7,16 @@ class Dispatcher(SimObject):
     cxx_header = "mem/dispatcher.hh"
 
     rt_side_port = ResponsePort("port for receiving requests from"
-                        "the membus")
+                        "remapping table")
 
     mm_side_port = ResponsePort("port for receiving requests from"
-                        "the migration manager")
+                        "migration manager")
     
     ac_side_port = RequestPort("port for sending requests to"
                         "access counter")
 
     hbm_side_port = RequestPort("port for sending requests to"
-                        "hbm physical memory")
+                        "physical hbm memory")
     
     dram_side_port = RequestPort("port for sending requests to"
-                        "dram physical memory")
+                        "physical dram memory")
