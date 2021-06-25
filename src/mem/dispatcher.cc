@@ -74,6 +74,9 @@ Dispatcher::handleFunctional(PacketPtr pkt) {
 
 bool
 Dispatcher::handleRequest(PacketPtr pkt) {
+    PacketPtr acpkt = new Packet(pkt, false, true);
+    acpkt->reqport = pkt->reqport;
+    acpkt->respport = pkt->respport;
     if (isDramOrHbm(pkt)) {
         if (blocked[BlockType::Rt2Dram] || blocked[BlockType::Mm2Dram] || !dram_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Physical DRAM is busy! Request blocked for addr %#x\n", pkt->getAddr());
@@ -95,9 +98,9 @@ Dispatcher::handleRequest(PacketPtr pkt) {
             return false;
         }
     }
-    if (pkt->reqport == Packet::PortType::RemappingTable && (blocked[BlockType::Rt2Ac] || !ac_side_port.sendPacket(pkt))) {
-        DPRINTF(Dispatcher, "Access Counter is busy! Request blocked for addr %#x\n", pkt->getAddr());
-        if (pkt->reqport == Packet::PortType::RemappingTable) {
+    if (acpkt->reqport == Packet::PortType::RemappingTable && (blocked[BlockType::Rt2Ac] || !ac_side_port.sendPacket(acpkt))) {
+        DPRINTF(Dispatcher, "Access Counter is busy! Request blocked for addr %#x\n", acpkt->getAddr());
+        if (acpkt->reqport == Packet::PortType::RemappingTable) {
             blocked[BlockType::Rt2Ac] = true;
         }
         return false;
