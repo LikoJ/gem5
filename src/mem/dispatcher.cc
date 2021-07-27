@@ -75,6 +75,7 @@ Dispatcher::handleFunctional(PacketPtr pkt) {
 
 bool
 Dispatcher::handleRequest(PacketPtr pkt) {
+    DPRINTF(Dispatcher, "Req schedule!");
     schedule(event, 100);
     PacketPtr acpkt = new Packet(pkt, false, true);
     acpkt->reqport = pkt->reqport;
@@ -112,6 +113,7 @@ Dispatcher::handleRequest(PacketPtr pkt) {
 
 bool
 Dispatcher::handleResponse(PacketPtr pkt) {
+    DPRINTF(Dispatcher, "Resp schedule!");
     schedule(event, 100);
     if (pkt->reqport == Packet::PortType::RemappingTable) {
         if (blocked[BlockType::Dram2Rt] || blocked[BlockType::Hbm2Rt] || !rt_side_port.sendPacket(pkt)) {
@@ -174,6 +176,7 @@ Dispatcher::handleRespRetry() {
 
 void
 Dispatcher::processEvent() {
+    std::cout << "event!" << std::endl;
     DPRINTF(Dispatcher, "Event process!");
 }
 
