@@ -39,7 +39,7 @@ FlatMemory::handleFunctional(PacketPtr pkt) {
 
 bool
 FlatMemory::handleRequest(PacketPtr pkt) {
-    schedule(event, 100);
+    schedule(event, curTick() + 100);
     if (bus_side_blocked) {
         DPRINTF(FlatMemory, "Request blocked directly for addr %#x\n", pkt->getAddr());
         return false;
@@ -57,7 +57,7 @@ FlatMemory::handleRequest(PacketPtr pkt) {
 
 bool
 FlatMemory::handleResponse(PacketPtr pkt) {
-    schedule(event, 100);
+    schedule(event, curTick() + 100);
     if (mem_side_blocked) {
         DPRINTF(FlatMemory, "Response blocked directly for addr %#x\n", pkt->getAddr());
         return false;
