@@ -75,7 +75,7 @@ Dispatcher::handleFunctional(PacketPtr pkt) {
 
 bool
 Dispatcher::handleRequest(PacketPtr pkt) {
-    schedule(event, curTick());
+    schedule(event, curTick() + 100);
     PacketPtr acpkt = new Packet(pkt, false, true);
     acpkt->reqport = pkt->reqport;
     acpkt->respport = pkt->respport;
@@ -112,7 +112,7 @@ Dispatcher::handleRequest(PacketPtr pkt) {
 
 bool
 Dispatcher::handleResponse(PacketPtr pkt) {
-    schedule(event, curTick());
+    schedule(event, curTick() + 100);
     if (pkt->reqport == Packet::PortType::RemappingTable) {
         if (blocked[BlockType::Dram2Rt] || blocked[BlockType::Hbm2Rt] || !rt_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Remapping table is busy! Response blocked for addr %#x\n", pkt->getAddr());
