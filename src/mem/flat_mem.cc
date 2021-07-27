@@ -44,7 +44,7 @@ FlatMemory::handleRequest(PacketPtr pkt) {
         DPRINTF(FlatMemory, "Request blocked directly for addr %#x\n", pkt->getAddr());
         return false;
     }
-    DPRINTF(FlatMemory, "Got request for addr %#x\n", pkt->getAddr());
+    // DPRINTF(FlatMemory, "Got request for addr %#x\n", pkt->getAddr());
 
     // Simply forward to the memory port
     if (!mem_side_port.sendPacket(pkt)) {
@@ -62,7 +62,7 @@ FlatMemory::handleResponse(PacketPtr pkt) {
         DPRINTF(FlatMemory, "Response blocked directly for addr %#x\n", pkt->getAddr());
         return false;
     }
-    DPRINTF(FlatMemory, "Got response for addr %#x\n", pkt->getAddr());
+    // DPRINTF(FlatMemory, "Got response for addr %#x\n", pkt->getAddr());
 
     // Simply forward to the bus port
     if (!bus_side_port.sendPacket(pkt)) {
