@@ -6,7 +6,8 @@ FlatMemory::FlatMemory(const FlatMemoryParams &params)
     : SimObject(params),
       bus_side_port(name() + ".bus_side_port", *this),
       mem_side_port(name() + ".mem_side_port", *this),
-      bus_side_blocked(false) {}
+      bus_side_blocked(false),
+      event([this]{processEvent();}, name()) {}
 
 Port& 
 FlatMemory::getPort(const std::string &if_name, PortID idx) {
@@ -38,6 +39,7 @@ FlatMemory::handleFunctional(PacketPtr pkt) {
 
 bool
 FlatMemory::handleRequest(PacketPtr pkt) {
+    schedule(event, 100);
     if (bus_side_blocked) {
         DPRINTF(FlatMemory, "Request blocked directly for addr %#x\n", pkt->getAddr());
         return false;
@@ -55,6 +57,7 @@ FlatMemory::handleRequest(PacketPtr pkt) {
 
 bool
 FlatMemory::handleResponse(PacketPtr pkt) {
+    schedule(event, 100);
     if (mem_side_blocked) {
         DPRINTF(FlatMemory, "Response blocked directly for addr %#x\n", pkt->getAddr());
         return false;
@@ -92,6 +95,11 @@ FlatMemory::handleRespRetry() {
 void
 FlatMemory::sendRangeChange() {
     bus_side_port.sendRangeChange();
+}
+
+void
+FlatMemory::processEvent() {
+    DPRINTF(FlatMemory, "Event process!");
 }
 
 FlatMemory::BusSidePort::BusSidePort(const std::string& _name,

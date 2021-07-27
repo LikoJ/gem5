@@ -50,6 +50,8 @@ class FlatMemory : public SimObject {
     bool bus_side_blocked;
     bool mem_side_blocked;
 
+    EventFunctionWrapper event;
+
     AddrRangeList getAddrRanges() const;
     void sendRangeChange();
     Tick handleAtomic(PacketPtr pkt);
@@ -58,6 +60,8 @@ class FlatMemory : public SimObject {
     bool handleResponse(PacketPtr pkt);
     void handleReqRetry();
     void handleRespRetry();
+
+    void processEvent();
 
   public:
     FlatMemory(const FlatMemoryParams &params);
