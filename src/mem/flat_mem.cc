@@ -43,8 +43,11 @@ FlatMemory::handleRequest(PacketPtr pkt) {
         DPRINTF(FlatMemory, "Request blocked directly for addr %#x\n", pkt->getAddr());
         return false;
     }
-    DPRINTF(FlatMemory, "Req schedule\n");
-    schedule(event, curTick());
+    if (curTick() != lastTick) {
+        DPRINTF(FlatMemory, "Req schedule\n");
+        lastTick = curTick();
+        schedule(event, curTick());
+    }
     // DPRINTF(FlatMemory, "Got request for addr %#x\n", pkt->getAddr());
 
     // Simply forward to the memory port
@@ -62,8 +65,11 @@ FlatMemory::handleResponse(PacketPtr pkt) {
         DPRINTF(FlatMemory, "Response blocked directly for addr %#x\n", pkt->getAddr());
         return false;
     }
-    DPRINTF(FlatMemory, "Resp schedule\n");
-    schedule(event, curTick());
+    if (curTick() != lastTick) {
+        DPRINTF(FlatMemory, "Req schedule\n");
+        lastTick = curTick();
+        schedule(event, curTick());
+    }
     // DPRINTF(FlatMemory, "Got response for addr %#x\n", pkt->getAddr());
 
     // Simply forward to the bus port

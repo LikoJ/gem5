@@ -52,6 +52,8 @@ class FlatMemory : public SimObject {
 
     EventFunctionWrapper event;
 
+    Tick lastTick;
+
     AddrRangeList getAddrRanges() const;
     void sendRangeChange();
     Tick handleAtomic(PacketPtr pkt);
