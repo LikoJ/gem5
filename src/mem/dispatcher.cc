@@ -8,7 +8,8 @@ Dispatcher::Dispatcher(const DispatcherParams& params)
       mm_side_port(name() + ".mm_side_port", *this, Dispatcher::PortType::MigrationManager),
       ac_side_port(name() + ".ac_side_port", *this, Dispatcher::PortType::AccessCounter),
       hbm_side_port(name() + ".hbm_side_port", *this, Dispatcher::PortType::PhysicalHbm),
-      dram_side_port(name() + "dram_side_port", *this, Dispatcher::PortType::PhysicalDram) {
+      dram_side_port(name() + "dram_side_port", *this, Dispatcher::PortType::PhysicalDram),
+      event([this]{processEvent();}, name()) {
 
     for (int i = 0; i < BlockType::BlockTypeSize; i++) {
         blocked[i] = false;
@@ -74,6 +75,7 @@ Dispatcher::handleFunctional(PacketPtr pkt) {
 
 bool
 Dispatcher::handleRequest(PacketPtr pkt) {
+    schedule(event, curTick());
     PacketPtr acpkt = new Packet(pkt, false, true);
     acpkt->reqport = pkt->reqport;
     acpkt->respport = pkt->respport;
@@ -110,6 +112,7 @@ Dispatcher::handleRequest(PacketPtr pkt) {
 
 bool
 Dispatcher::handleResponse(PacketPtr pkt) {
+    schedule(event, curTick());
     if (pkt->reqport == Packet::PortType::RemappingTable) {
         if (blocked[BlockType::Dram2Rt] || blocked[BlockType::Hbm2Rt] || !rt_side_port.sendPacket(pkt)) {
             DPRINTF(Dispatcher, "Remapping table is busy! Response blocked for addr %#x\n", pkt->getAddr());
@@ -167,6 +170,11 @@ Dispatcher::handleRespRetry() {
         blocked[BlockType::Hbm2Mm] = false;
         hbm_side_port.trySendRetry();
     }
+}
+
+void
+Dispatcher::processEvent() {
+    DPRINTF(Dispatcher, "Event process!");
 }
 
 Dispatcher::CpuSidePort::CpuSidePort(const std::string& _name,

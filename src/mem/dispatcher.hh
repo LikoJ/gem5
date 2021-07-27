@@ -83,6 +83,8 @@ class Dispatcher : public SimObject {
     MemSidePort hbm_side_port;  // connect to physical hbm
     MemSidePort dram_side_port; // connect to physical dram
 
+    EventFunctionWrapper event;
+
     bool blocked[BlockType::BlockTypeSize];
 
     AddrRangeList getAddrRanges() const;
@@ -94,6 +96,8 @@ class Dispatcher : public SimObject {
     void handleReqRetry();
     void handleRespRetry();
     bool isDramOrHbm(PacketPtr pkt);
+
+    void processEvent();
 };
 
 #endif
