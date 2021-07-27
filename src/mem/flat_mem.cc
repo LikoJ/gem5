@@ -39,7 +39,7 @@ FlatMemory::handleFunctional(PacketPtr pkt) {
 
 bool
 FlatMemory::handleRequest(PacketPtr pkt) {
-    schedule(event, curTick() + 100);
+    schedule(event, curTick());
     if (bus_side_blocked) {
         DPRINTF(FlatMemory, "Request blocked directly for addr %#x\n", pkt->getAddr());
         return false;
@@ -57,7 +57,7 @@ FlatMemory::handleRequest(PacketPtr pkt) {
 
 bool
 FlatMemory::handleResponse(PacketPtr pkt) {
-    schedule(event, curTick() + 100);
+    schedule(event, curTick());
     if (mem_side_blocked) {
         DPRINTF(FlatMemory, "Response blocked directly for addr %#x\n", pkt->getAddr());
         return false;
@@ -99,7 +99,7 @@ FlatMemory::sendRangeChange() {
 
 void
 FlatMemory::processEvent() {
-    DPRINTF(FlatMemory, "Event process!");
+    DPRINTF(FlatMemory, "Event process!\n");
 }
 
 FlatMemory::BusSidePort::BusSidePort(const std::string& _name,
